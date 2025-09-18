@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Горизонтальна хронологія комп'ютерів</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+      display: flex;
+      flex-direction: column;
+    }
+    h1 {
+      text-align: center;
+      color: #222;
+      margin: 40px 0 30px 0;
+      letter-spacing: 1px;
+      font-size: 2.2em;
+      text-shadow: 0 2px 8px #b3d1ff44;
+      font-weight: 700;
+    }
+    .timeline-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+    }
+    .timeline {
+      display: flex;
+      align-items: center;
+      position: relative;
+      margin-bottom: 40px;
+      overflow-x: auto;
+      padding-bottom: 40px;
+      scrollbar-width: thin;
+      scrollbar-color: #007bff #e0e7ff;
+      width: 100vw;
+      max-width: 100vw;
+    }
+    .timeline::-webkit-scrollbar {
+      height: 8px;
+      background: #e0e7ff;
+    }
+    .timeline::-webkit-scrollbar-thumb {
+      background: #007bff;
+      border-radius: 4px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 8px;
+      background: linear-gradient(90deg, #007bff 0%, #00c3ff 100%);
+      z-index: 0;
+      border-radius: 4px;
+      transform: translateY(-50%);
+      box-shadow: 0 2px 12px #007bff33;
+      opacity: 0.7;
+    }
+    .timeline-date {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.35);
+      backdrop-filter: blur(6px);
+      border: 3px solid #007bff;
+      color: #007bff;
+      border-radius: 50% / 50%;
+      width: 520px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 2.2em;
+      margin: 0 36px;
+      cursor: pointer;
+      transition:
+        background 0.3s,
+        color 0.3s,
+        border 0.3s,
+        box-shadow 0.3s,
+        transform 0.2s;
+      box-shadow: 0 4px 24px 0 rgba(0,123,255,0.10);
+      outline: none;
+      user-select: none;
+      border-bottom: 5px solid #00c3ff;
+      text-align: center;
+      word-break: normal;
+      white-space: nowrap;
+      overflow: hidden;
+      padding: 0 10px;
+    }
+    .timeline-date.active, .timeline-date:hover, .timeline-date:focus {
+      background: linear-gradient(135deg, #007bff 60%, #00c3ff 100%);
+      color: #fff;
+      border: 3px solid #fff;
+      box-shadow: 0 8px 32px 0 rgba(0,123,255,0.25), 0 0 0 6px #00c3ff33;
+      transform: scale(1.13);
+      border-bottom: 5px solid #fff;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.35);
+      align-items: center;
+      justify-content: center;
+      animation: fadeInBg 0.3s;
+    }
+    .modal.active {
+      display: flex;
+    }
+    @keyframes fadeInBg {
+      from { background: rgba(0,0,0,0);}
+      to   { background: rgba(0,0,0,0.35);}
+    }
+    .modal-content {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(16px);
+      border-radius: 32px;
+      box-shadow: 0 8px 40px 0 rgba(0,123,255,0.18), 0 1.5px 8px #00c3ff22;
+      padding: 48px 60px 36px 60px;
+      max-width: 900px;
+      width: 50vw;
+      min-width: 320px;
+      min-height: 200px;
+      text-align: center;
+      position: relative;
+      animation: modalShow 0.4s;
+      border-left: 12px solid #007bff;
+      border-right: 12px solid #00c3ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    @keyframes modalShow {
+      from { opacity: 0; transform: translateY(60px);}
+      to   { opacity: 1; transform: translateY(0);}
+    }
+    .modal-content h2 {
+      margin-top: 0;
+      color: #007bff;
+      font-size: 2em;
+      letter-spacing: 1px;
+      font-weight: 700;
+      text-shadow: 0 2px 8px #b3d1ff33;
+    }
+    .modal-content p {
+      color: #222;
+      font-size: 1.25em;
+      margin-bottom: 0;
+      line-height: 1.5;
+      font-weight: 500;
+      text-shadow: 0 1px 4px #fff8;
+    }
+    .close-modal {
+      position: absolute;
+      top: 18px;
+      right: 28px;
+      font-size: 2.2em;
+      color: #007bff;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: color 0.2s;
+      z-index: 10;
+    }
+    .close-modal:hover {
+      color: #ff3b3b;
+    }
+    @media (max-width: 1100px) {
+      .timeline-date {
+        width: 300px;
+        height: 80px;
+        font-size: 1.2em;
+        margin: 0 12px;
+      }
+      .modal-content {
+        padding: 24px 8px 18px 8px;
+        width: 90vw;
+        min-width: unset;
+      }
+      h1 {
+        font-size: 1.3em;
+      }
+    }
+    @media (max-width: 600px) {
+      .timeline-date {
+        width: 120px;
+        height: 40px;
+        font-size: 0.85em;
+        margin: 0 6px;
+        padding: 0 2px;
+      }
+      .timeline {
+        padding-bottom: 20px;
+      }
+      .modal-content {
+        padding: 12px 2vw;
+        font-size: 0.95em;
+        width: 98vw;
+      }
+      h1 {
+        font-size: 1.1em;
+      }
+    }
+    footer {
+      text-align: center;
+      padding: 18px 0 10px 0;
+      background: linear-gradient(90deg, #e0e7ff 0%, #c2e9fb 100%);
+      color: #007bff;
+      font-size: 1em;
+      letter-spacing: 1px;
+      margin-top: auto;
+      box-shadow: 0 -2px 12px #007bff11;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <h1>Горизонтальна хронологія розвитку комп'ютерів</h1>
+  <div class="timeline-container">
+    <div class="timeline" id="timeline">
+      <div class="timeline-date" data-index="0" tabindex="0">1837</div>
+      <div class="timeline-date" data-index="1" tabindex="0">1936</div>
+      <div class="timeline-date" data-index="2" tabindex="0">1941</div>
+      <div class="timeline-date" data-index="3" tabindex="0">1943–44</div>
+      <div class="timeline-date" data-index="4" tabindex="0">1946</div>
+      <div class="timeline-date" data-index="5" tabindex="0">1947</div>
+      <div class="timeline-date" data-index="6" tabindex="0">1951</div>
+      <div class="timeline-date" data-index="7" tabindex="0">1956</div>
+      <div class="timeline-date" data-index="8" tabindex="0">1964</div>
+      <div class="timeline-date" data-index="9" tabindex="0">1971</div>
+      <div class="timeline-date" data-index="10" tabindex="0">1976</div>
+      <div class="timeline-date" data-index="11" tabindex="0">1981</div>
+      <div class="timeline-date" data-index="12" tabindex="0">1990</div>
+      <div class="timeline-date" data-index="13" tabindex="0">2007</div>
+      <div class="timeline-date" data-index="14" tabindex="0">2010–20-ті</div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modal-content" id="modal-content">
+      <button class="close-modal" id="close-modal" aria-label="Закрити">&times;</button>
+      <h2 id="modal-title"></h2>
+      <p id="modal-desc"></p>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 Treedz | Створено для навчання та натхнення 💻
+  </footer>
+  <script>
+    // Події
+    const events = [
+      {
+        title: "1837",
+        desc: "<b>Чарльз Беббідж</b> проєктує Аналітичну машину — першу концепцію універсального комп’ютера."
+      },
+      {
+        title: "1936",
+        desc: "<b>Алан Тюрінг</b> пропонує машину Тюрінга — теоретичну модель, що стала основою сучасної інформатики."
+      },
+      {
+        title: "1941",
+        desc: "<b>Конрад Цузе</b> створює Z3 — перший програмований, повністю автоматичний цифровий комп’ютер."
+      },
+      {
+        title: "1943–1944",
+        desc: "Створено <b>Colossus</b> — перший електронний програмований цифровий комп’ютер для дешифрування під час Другої світової війни."
+      },
+      {
+        title: "1946",
+        desc: "<b>ENIAC</b> — перший універсальний електронний цифровий комп’ютер."
+      },
+      {
+        title: "1947",
+        desc: "Винайдено <b>транзистор</b>, що революціонізував електроніку та комп’ютери."
+      },
+      {
+        title: "1951",
+        desc: "<b>UNIVAC I</b> — перший комерційний комп’ютер у США."
+      },
+      {
+        title: "1956",
+        desc: "<b>IBM</b> представляє перший жорсткий диск для зберігання великих обсягів даних."
+      },
+      {
+        title: "1964",
+        desc: "<b>Дуглас Енгельбарт</b> демонструє комп’ютерну мишу та концепцію графічного інтерфейсу (GUI)."
+      },
+      {
+        title: "1971",
+        desc: "<b>Intel</b> випускає перший мікропроцесор 4004 — початок мікрокомп’ютерної революції."
+      },
+      {
+        title: "1976",
+        desc: "Випуск <b>Apple I</b> — одного з перших персональних комп’ютерів."
+      },
+      {
+        title: "1981",
+        desc: "Запуск <b>IBM PC</b> — стандарт персональних комп’ютерів, що прискорив революцію ПК."
+      },
+      {
+        title: "1990",
+        desc: "<b>Тім Бернерс-Лі</b> винаходить World Wide Web — комп’ютери стають мережевими пристроями для обміну інформацією."
+      },
+      {
+        title: "2007",
+        desc: "<b>Apple</b> випускає iPhone — поєднання комп’ютера та мобільного пристрою, що змінило спосіб взаємодії з технологіями."
+      },
+      {
+        title: "2010–2020-ті",
+        desc: "Розвиток <b>хмарних технологій</b> та <b>штучного інтелекту</b> — комп’ютерна потужність доступна всюди, AI змінює індустрії."
+      }
+    ];
+
+    const dates = document.querySelectorAll('.timeline-date');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDesc = document.getElementById('modal-desc');
+    const closeModalBtn = document.getElementById('close-modal');
+
+    dates.forEach(date => {
+      date.addEventListener('click', function() {
+        dates.forEach(d => d.classList.remove('active'));
+        this.classList.add('active');
+        const idx = +this.dataset.index;
+        modalTitle.innerHTML = events[idx].title;
+        modalDesc.innerHTML = events[idx].desc;
+        modal.classList.add('active');
+      });
+      date.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          this.click();
+        }
+      });
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+      dates.forEach(d => d.classList.remove('active'));
+    });
+
+    // Закриття по кліку поза модальним вікном
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        dates.forEach(d => d.classList.remove('active'));
+      }
+    });
+
+    // ESC для закриття
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        modal.classList.remove('active');
+        dates.forEach(d => d.classList.remove('active'));
+      }
+    });
+  </script>
+</body>
+</html>
